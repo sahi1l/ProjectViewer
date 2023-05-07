@@ -1,0 +1,22 @@
+# COMMANDS
+* Can cd fork a new bash shell in the current terminal window?
+* ToDo should open as programming automatically, in Aquamacs
+* If I call status with "active"/"normal"/"shelved" in the file's spot, and that's not the name of a project, give it a proper error
+* status should give a list of potential statuses, and be more flexible ("normal"/"neutral", e.g. or "+1/0/-1")
+* DONE GUI PROJECT VIEWER
+** DONE Try doing a curses app
+** DONE Keep an updated ls view
+** DONE Click on one to see its todo text
+** DONE Buttons on the list to do all the things
+*** DONE Keys to cycle the status
+** DONE Different sorting options
+*** If status-based, keep the current project highlighted
+** TODO change the status of the current name
+** TODO Description window
+*** Make it its own one-line or two-line window
+*** Make it a different color
+*** Allow editing of the description
+    1. Open an external editor to change it
+    2. Create a simple line editor in Python curses
+       I will need to switch modes for this.
+
