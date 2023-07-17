@@ -1,16 +1,22 @@
-# COMMANDS
-* Can cd fork a new bash shell in the current terminal window?
-* ToDo should open as programming automatically, in Aquamacs
-* If I call status with "active"/"normal"/"shelved" in the file's spot, and that's not the name of a project, give it a proper error
-* status should give a list of potential statuses, and be more flexible ("normal"/"neutral", e.g. or "+1/0/-1")
-* DONE GUI PROJECT VIEWER
-** DONE Try doing a curses app
-** DONE Keep an updated ls view
-** DONE Click on one to see its todo text
-** DONE Buttons on the list to do all the things
-*** DONE Keys to cycle the status
-** DONE Different sorting options
-*** If status-based, keep the current project highlighted
+* ===Prompt for missing data===
+  Like running "project add" should ask for location, name, etc.
+** Write a function to do that
+** If I call status with "active"/"normal"/"shelved" in the file's spot, and that's not the name of a project, give it a proper error
+** Require a - in front of active/normal/shelved to make it clear
+
+* ===PROJECT ADD===
+** "project add" could also init git, even create a git repo
+** Add a command to check if the current directory is already a project
+** Use boldface for the questions in this section
+** Make a function which is the equivalent of input, which also takes a parameter that specifies what happens if the response is blank: either a default value or exit() if None
+
+* ===NEEDED COMMANDS===
+** TODO Add a command "move" if I want to relocate a project
+** Delete projects
+** Search projects for keywords as a filter
+** "path" (which I can use with cd)
+
+* ===GUI PROJECT VIEWER===
 ** TODO change the status of the current name
 ** TODO Description window
 *** Make it its own one-line or two-line window
@@ -19,4 +25,10 @@
     1. Open an external editor to change it
     2. Create a simple line editor in Python curses
        I will need to switch modes for this.
+
+
+* ===MISC===
+** Can cd fork a new bash shell in the current terminal window?
+** TODO ToDo should open as programming automatically, in Aquamacs
+** Handle errors gracefully
 

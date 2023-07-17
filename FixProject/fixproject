@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+import sys
+import subprocess
+X = subprocess.run(["find", "/Users/sahill/iCloud/Projects", "-name", "@description.txt"],capture_output=True)
+
+options=list(map(lambda x: x.replace("/@description.txt","").replace("//","/"),X.stdout.decode().split("\n")))
+print(options)
+#look through every local link
+#if its target doesn't exist, then find the best string in options that matches its target
+#prompt to replace

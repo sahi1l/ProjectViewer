@@ -2,7 +2,7 @@
 import project
 import curses
 import textwrap
-LOG = open("/Users/sahill/iCloud/Projects/ProjectViewer/LOG","w",buffering=1)
+LOG = open("/Users/sahill/Projects/ProjectViewer/LOG","w",buffering=1)
 
 #import curses.wrapper #figure this out eventually
 screen = curses.initscr()
