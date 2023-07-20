@@ -1,22 +1,26 @@
-* ===Prompt for missing data===
+* DONE ===Prompt for missing data===
   Like running "project add" should ask for location, name, etc.
-** Write a function to do that
-** If I call status with "active"/"normal"/"shelved" in the file's spot, and that's not the name of a project, give it a proper error
-** Require a - in front of active/normal/shelved to make it clear
+** DONE Write a function to do that
+** DONE If I call status with "active"/"normal"/"shelved" in the file's spot, and that's not the name of a project, give it a proper error
+** DONE Require a - in front of active/normal/shelved to make it clear
 
-* ===PROJECT ADD===
-** "project add" could also init git, even create a git repo
-** Add a command to check if the current directory is already a project
-** Use boldface for the questions in this section
-** Make a function which is the equivalent of input, which also takes a parameter that specifies what happens if the response is blank: either a default value or exit() if None
+* ===PROJECT ADD===a
+** DONE "project add" could also init git, even create a git repo
+** create a git repo?
+** DONE Add a command to check if the current directory is already a project
+   Or: what is the name of the project this folder belongs to? "project is"
+** DONE Use boldface for the questions in this section
+** DONE Make a function which is the equivalent of input, which also takes a parameter that specifies what happens if the response is blank: either a default value or exit() if None
 
 * ===NEEDED COMMANDS===
-** TODO Add a command "move" if I want to relocate a project
-** Delete projects
-** Search projects for keywords as a filter
-** "path" (which I can use with cd)
+** DONE Add a command "move" if I want to relocate a project
+** DONE Delete projects
+** TODO Search projects for keywords as a filter
+** DONE "path" (which I can use with cd)
 
 * ===GUI PROJECT VIEWER===
+** Add a help to see what commands are available
+** Expand the available commands (are there any???)
 ** TODO change the status of the current name
 ** TODO Description window
 *** Make it its own one-line or two-line window
