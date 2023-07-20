@@ -8,7 +8,6 @@ from glob import glob
 from pathlib import Path #might be inconsistent to mix this with os.path
 #I only use Path once, to access the touch command
 from termcolor import colored
-linkdir = os.path.expanduser("~") + "/.projectdirs" #this directory stores all the softlinks
 to_colorize = True
 def colorize(text,*args,**kwargs):
     if to_colorize:
@@ -23,9 +22,18 @@ STATUSES=["active","normal","shelved"]
 SAMHILL = True #set this as False if you're not the author
 MAC = True #only if you have a mac
 EDITOR = "/opt/homebrew/bin/emacs" #or the path to your favorite command-line editor
+#------------------------------------------------------------
 def ProjectError(message):
     print(colorize(message,"red"))
     sys.exit()
+#------------------------------------------------------------
+#linkdir stores the softlinks by which the system works
+linkdir = os.path.expanduser("~") + "/.projectdirs" 
+if not os.path.lexists(linkdir):
+    os.makedirs(linkdir)
+elif not os.path.isdir(linkdir):
+    ProjectError(f"{linkdir} cannot be created.")
+
 #------------------------------------------------------------
 def output(value):
     """Print value if interactive, otherwise return it"""
