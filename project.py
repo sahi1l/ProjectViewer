@@ -4,10 +4,35 @@ import sys
 import os
 import subprocess
 import re
+import readline
 from glob import glob
 from pathlib import Path #might be inconsistent to mix this with os.path
 #I only use Path once, to access the touch command
 from termcolor import colored
+
+#READLINE============================================================
+readline.parse_and_bind('tab: complete')
+class SimpleCompleter(object):
+    def __init__(self,options):
+        self.options = sorted(options)
+    def complete(self,text,state):
+        response = None
+        if state == 0:
+            if text:
+                self.matches = [s for s in self.options if s and s.startswith(text)]
+            else:
+                self.matches = self.options[:]
+        try:
+            response = self.matches[state]
+        except IndexError:
+            response = None
+        return response
+
+def set_rl_completion(terms):
+    readline.set_completer(SimpleCompleter(terms).complete)
+    
+    
+#COLOR============================================================
 to_colorize = True
 def colorize(text,*args,**kwargs):
     if to_colorize:
@@ -24,7 +49,7 @@ MAC = True #only if you have a mac
 EDITOR = "/opt/homebrew/bin/emacs" #or the path to your favorite command-line editor
 #------------------------------------------------------------
 def ProjectError(message):
-    print(colorize(message,"red"))
+    print(colorize("Error: "+message,"red"))
     sys.exit()
 #------------------------------------------------------------
 #linkdir stores the softlinks by which the system works
@@ -42,9 +67,10 @@ def output(value):
         return None
     return value
 
-def ask(prompt,ifnone):
+def ask(prompt,ifnone,options=[]):
     """Prompts for a result, returns a default response OR exits if no response is given"""
     try:
+        if options: set_rl_completion(options)
         result = input(colorize(prompt,"yellow",attrs=["bold"]))
         if result=='':
             if ifnone is None:
@@ -118,7 +144,7 @@ class NameList:
     def __init__(self):
         pass
     #----------------------------------------
-    def unsorted(self):
+    def names(self):
         os.chdir(linkdir)
         return list(filter(check_link, glob("*")))
     def path(self):
@@ -126,7 +152,7 @@ class NameList:
             """Sort by status, then by path name of the project itself"""
             return getstat(name)+project_dir(name)
 
-        return sorted(self.unsorted(),
+        return sorted(self.names(),
                       key=pathsort)
     def date(self):
         def date_sort(name):
@@ -134,15 +160,15 @@ class NameList:
             inverse_status = str(2-int(getstat(name)))
             return inverse_status + str(getdate(name))
         
-        return sorted(self.unsorted(), key=date_sort, reverse=True)
+        return sorted(self.names(), key=date_sort, reverse=True)
     
     def alpha(self):
         alpha_sort = str.casefold
-        return sorted(self.unsorted(), key=alpha_sort)
+        return sorted(self.names(), key=alpha_sort)
     def Alpha(self):
         def alpha_sort(name):
             return getstat(name) + str.casefold(name)
-        return sorted(self.unsorted(), key=alpha_sort)
+        return sorted(self.names(), key=alpha_sort)
         
     def numbers(self):
         return {x[1]:x[0] for x in enumerate(self.date())}
@@ -368,18 +394,19 @@ def cmd_status(name, level=None):
     if level is not None: level = str(level)
     if level is None or level[0] not in "ANSans012":
         while True:
-            level = ask("Change the status? [ANS] ","")
+            level = ask("Change the status? [ANS] ","",
+                        ["active","normal","shelved"])
             if level and level[0] in "ANSans012": break
     if level:
         if level.isnumeric():
             level = STATUSES[int(level)]
-        if level.lower() in "ans":
+        if level[0].lower() in "ans":
             level = {x[0]:x for x in STATUSES}[level.lower()]
         if level in STATUSES:
             setfile(name, STAT, level)
             output(f"Status changed to {level}")
         else:
-            output("Error: no status change")
+            ProjectError("Status not recognized. Aborting.")
 #============================================================
 def cmd_todo(name):
     """Open the TODO file for the project in an external editor"""
@@ -550,9 +577,23 @@ def general_commands(command,prams):
 
 def specific_commands(command,project,details):
     """Commands for a specific project"""
-    if pram_match(command,"a"): cmd_add(project,details)
-    elif command == "cd": cmd_changedir(project)
-    elif pram_match(command,"pa"): cmd_path(project)
+    if pram_match(command,"a"):
+        cmd_add(project,details)
+        return
+    if project not in name_list.names():
+        matches = list(filter(lambda x:x.startswith(project),name_list.names()))
+        if len(matches) == 0:
+            ProjectError("No such project found.")
+        elif len(matches) > 1:
+            ProjectError("Multiple matches found: "+(' '.join(matches)))
+        else:
+            project = matches[0]
+    if pram_match(command,"pa"):
+        #Output path before we output the name of the project
+        cmd_path(project)
+        return
+    output(f"Project: {project}")
+    if command == "cd": cmd_changedir(project)
     elif pram_match(command,["d"]): cmd_description(project,details)
     elif pram_match(command,["rm"]): cmd_delete(project)
     elif pram_match(command,["i"]): cmd_info(project)
@@ -573,7 +614,7 @@ def interactive():
 
     if len(prams)<1:
         while True:
-            name = ask("Enter project name: ", None)
+            name = ask("Enter project name: ", None,name_list.names())
             if name == "?": #get a list of all projects
                 cmd_short_list(None,True)
             else:
@@ -586,11 +627,6 @@ def interactive():
         details = prams[1]
     except IndexError:
         details = None
-    if pram_match(command,"pa"):
-        #Don't output the name for these commands
-        pass
-    else:
-        output(f"Project: {project}")
 
     specific_commands(command,project,details)
 
