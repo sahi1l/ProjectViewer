@@ -1,4 +1,4 @@
-#!/Usr/bin/env python3.10
+#!/Usr/bin/env python3
 """Project Viewer"""
 import sys
 import os
