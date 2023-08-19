@@ -1,4 +1,4 @@
-#!/Usr/bin/env python3
+#!/usr/bin/env python3
 """Project Viewer"""
 import sys
 import os
@@ -9,7 +9,9 @@ from glob import glob
 from pathlib import Path #might be inconsistent to mix this with os.path
 #I only use Path once, to access the touch command
 from termcolor import colored
-
+cwd = os.getcwd() #current working directory, for use with add
+def debug(x):
+    if True: print(x)
 #READLINE============================================================
 readline.parse_and_bind('tab: complete')
 class SimpleCompleter(object):
@@ -83,10 +85,12 @@ def ask(prompt,ifnone,options=[]):
 #DATES
 def getdate(name):
     """Gets the last modification time of the description file"""
+    if not project_dir(name,DESC): return 0
     return int(os.path.getmtime(project_dir(name,DESC)))
 #------------------------------------------------------------
 def touch(name):
     """the date on the description file indicates which was last run"""
+    if not project_dir(name,DESC): return None
     Path(project_dir(name,DESC)).touch()
 #============================================================
 #NUMBERS AS NAMES
@@ -101,21 +105,26 @@ def getproject(name):
 def getfile(name,typ):
     """Return the content of a file within project"""
     fname = project_dir(name,typ)
-    if os.path.exists(fname):
-        with open(fname, "r") as F:
-            return F.read().strip()
-    else:
-        return ""
+    try:
+        if os.path.exists(fname):
+            with open(fname, "r") as F:
+                return F.read().strip()
+        else:
+            return ""
+    except TypeError:
+        
+        breakpoint()
 #------------------------------------------------------------
-def setfile(name,typ,val):
+def setfile(name,typ,val,force=False):
     """Write the content of a file within the project, like DESC or STAT"""
-    with open(project_dir(name,typ),"w") as F:
+    with open(project_dir(name,typ,force),"w") as F:
         F.write(val)
 #============================================================
 #STATUSES
 #------------------------------------------------------------
 def getstat(name) -> str:
     """returns 0 (the highest), 1, or 2, as a string"""
+    if not project_dir(name,STAT): return "1"
     result=getfile(name,STAT).strip()
     if result=="":
         return "1"
@@ -199,9 +208,10 @@ def names(sort="date"):
 
 def project_link(name):
     """Return the location of the link in linkdir"""
+    if name is None: name=""
     return os.path.join(linkdir,name)
 
-def fixpath(path):
+def fixpath(path,force=False):
     """Normalizes a path name"""
     if isinstance(path,list): path=path[0]
     path = os.path.expanduser(path)
@@ -209,13 +219,14 @@ def fixpath(path):
     #This next bit is for my own personal benefit
     if SAMHILL:
         path = path.replace("/Library/Mobile Documents/com~apple~CloudDocs/","/iCloud/")
-    return path
-def project_dir(name,sub=None):
+    if force or os.path.exists(path): return path
+    return None
+def project_dir(name,sub=None,force=False):
     """Return the location of the project's directory, which the link points to"""
     path = project_link(name)
     if sub:
         path = os.path.join(path,sub)
-    return fixpath(path)
+    return fixpath(path,force)
 #------------------------------------------------------------
 def gettodo(name,color=True):
     #pylint: disable=anomalous-backslash-in-string
@@ -257,6 +268,8 @@ def prettyname(name,bold=False):
 def make_link(name,path,force=False):
     """Make a link in linkdir to path"""
     path = fixpath(path)
+    if path == linkdir:
+        ProjectError("Trying to add .projectdir")
     symlink = project_link(name)
     if os.path.islink(symlink):
         if force:
@@ -266,7 +279,7 @@ def make_link(name,path,force=False):
     if not os.path.isdir(path):
         ProjectError(f"{path} isn't a directory.")
     os.symlink(path, symlink)
-        
+    return path
 #------------------------------------------------------------
 def check_link(name):
     """Check if the link in linkdir actually points to anything"""
@@ -275,7 +288,11 @@ def check_link(name):
 #------------------------------------------------------------
 def add_project(name=None, path=".", description=""):
     """Add a project with the given parameters, called by cmd_add"""
+    os.chdir(cwd)
     path = os.path.realpath(path)
+    if path == linkdir:
+        ProjectError("Trying to add .projectdir")
+    debug(f"AddProject: {name=},{path=}")
     make_link(name,path)
     os.chdir(path)
     if description or not os.path.exists(DESC):
@@ -357,7 +374,8 @@ def cmd_add(project,path=None):
             output("Aborted.") #no return so ignored if not interactive
             sys.exit()
         os.chdir(path)
-        if ask("Should I set up a git repository in this directory? ","n") != "n":
+        
+        if (not os.path.exists(os.path.join(path,".git"))) and ask("Should I set up a git repository in this directory? ","n") != "n":
             subprocess.run(["git", "init"],check=False)
 #============================================================
 def cmd_changedir(name):
@@ -401,9 +419,9 @@ def cmd_status(name, level=None):
         if level.isnumeric():
             level = STATUSES[int(level)]
         if level[0].lower() in "ans":
-            level = {x[0]:x for x in STATUSES}[level.lower()]
+            level = {x[0]:x for x in STATUSES}[level.lower()[0]]
         if level in STATUSES:
-            setfile(name, STAT, level)
+            setfile(name, STAT, level, force=True)
             output(f"Status changed to {level}")
         else:
             ProjectError("Status not recognized. Aborting.")
@@ -429,7 +447,9 @@ def cmd_move(name,path=None):
     """Change the path on a project"""
     if not path:
         path = ask("Where is the new location? ",None)
+    os.chdir(cwd)
     make_link(name,path,force=True)
+    print(f"{name} now points to {path}")
 #============================================================
 def cmd_is(path="."):
     """Return the name of path's project, if it is a project"""
